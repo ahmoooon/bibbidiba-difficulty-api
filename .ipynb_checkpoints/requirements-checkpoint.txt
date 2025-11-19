@@ -1,6 +1,10 @@
 fastapi
-uvicorn[standard]
-numpy
+uvicorn
+google-cloud-firestore
+google-auth
+google-auth-oauthlib
 pandas
-scikit-learn
+numpy
 joblib
+scikit-learn
+python-dotenv
