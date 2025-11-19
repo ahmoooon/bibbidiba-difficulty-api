@@ -4,6 +4,7 @@ import joblib
 import numpy as np
 import pandas as pd
 import os
+import json
 
 from google.cloud import firestore
 from google.oauth2 import service_account
@@ -24,18 +25,14 @@ else:
 if not feature_cols:
     raise RuntimeError("feature_cols is empty – check difficulty_model_features.pkl")
 
-# 👉 1) Path to your downloaded JSON file
-SERVICE_ACCOUNT_FILE = r"C:\FYP\GitRepo\bibbidiba-creds\bibbidiba-firebase-adminsdk-fbsvc-b66f6ccbc9.json"
+# Read JSON from environment variable
+service_account_info = json.loads(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON"))
+creds = service_account.Credentials.from_service_account_info(service_account_info)
 
-# 👉 2) Your Firebase / GCP project ID
+# Firebase project ID
 PROJECT_ID = "bibbidiba"
 
-# 👉 3) Build credentials from the JSON
-creds = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE
-)
-
-# 👉 4) Create Firestore client with explicit credentials + project ID
+# Create Firestore client with explicit credentials + project ID
 db = firestore.Client(project=PROJECT_ID, credentials=creds)
 
 
