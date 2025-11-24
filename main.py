@@ -50,7 +50,7 @@ class DifficultyResponse(BaseModel):
 
 # ---------- FEATURE ENGINEERING HELPERS ----------
 
-PASS_THRESHOLD = 0.5  # same as game controller / notebook
+PASS_THRESHOLD = 0.5
 
 
 def compute_streaks(outcomes):
@@ -378,9 +378,23 @@ def predict(req: DifficultyRequest):
     # 2) Pick the most recent session as the “current state”
     row = features_df.sort_values("startTime").iloc[-1]
 
+    debug_csv_path = f"/tmp/features_{req.userId}.csv"
+    row.to_frame().T.to_csv(debug_csv_path, index=False)
+    print(f"[DEBUG] Latest session features saved to: {debug_csv_path}")
+
     # 3) Build input vector in EXACT training order
     try:
-        x = np.array([[row[col] for col in feature_cols]], dtype=float)
+        x_vals = []
+        int_cols = ["preferredTimeOfDay", "totalWordsAttempted"]
+        for col in feature_cols:
+            val = row.get(col, 0)  # default 0 if missing
+            if pd.isna(val):
+                val = 0.0            # replace NaN with 0.0
+            if col in int_cols:
+                val = int(val)
+            x_vals.append(val)
+        
+        x = np.array([x_vals], dtype=float)
     except KeyError as e:
         missing = str(e)
         raise HTTPException(
