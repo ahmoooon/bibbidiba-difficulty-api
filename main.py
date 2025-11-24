@@ -358,8 +358,8 @@ def build_features_for_user(user_id: str) -> pd.DataFrame:
         features_df["avgAccuracy"] - features_df["avgAccuracyPrev3"]
     )
     
-    features_df["retentionScore"].fillna(0.0, inplace=True)
-    features_df["improvementTrend"].fillna(0.0, inplace=True)
+    features_df["retentionScore"] = features_df["retentionScore"].fillna(0.0)
+    features_df["improvementTrend"] = features_df["improvementTrend"].fillna(0.0)
     
     return features_df
 
@@ -405,7 +405,7 @@ def predict(req: DifficultyRequest):
                 val = int(val)
             x_vals.append(val)
         
-        x = np.array([x_vals], dtype=float)
+        x_df = pd.DataFrame([x_vals], columns=feature_cols)
     except KeyError as e:
         missing = str(e)
         raise HTTPException(
@@ -417,8 +417,8 @@ def predict(req: DifficultyRequest):
         )
 
     # 4) Run model
-    preds = model.predict(x)
-    probs = model.predict_proba(x)[0]
+    preds = model.predict(x_df)
+    probs = model.predict_proba(x_df)[0]
     classes = model.classes_
 
     class_probs = {str(cls): float(p) for cls, p in zip(classes, probs)}
