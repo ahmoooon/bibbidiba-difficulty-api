@@ -195,7 +195,8 @@ def build_features_for_user(user_id: str) -> pd.DataFrame:
         duration_min = float(sess.get("durationMin", 0.0) or 0.0)
         avg_acc = float(sess.get("avgAccuracy", 0.0) or 0.0)  # 0..1
         target_count = int(sess.get("targetCount", 0) or 0)
-        completed_count = int(sess.get("completedCount", 0) or 0)
+        completed_count_raw = sess.get("completedCount", 0)
+        completed_count = int(0 if pd.isna(completed_count_raw) else completed_count_raw)
         success_count = int(sess.get("successCount", 0) or 0)
 
         sess_attempts = attempts_by_session.get(sid)
