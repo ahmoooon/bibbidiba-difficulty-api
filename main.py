@@ -143,7 +143,7 @@ def build_features_for_user(user_id: str) -> pd.DataFrame:
     # ---------------------------
     # 2) Load attempts for child
     # ---------------------------
-    attempts_ref = db.collection_group("wordAttempts").where(filter=("userId", "==", user_id))
+    attempts_ref = db.collection_group("wordAttempts").where("userId", "==", user_id)
     attempts = []
     for doc in attempts_ref.stream():
         row = doc.to_dict() or {}
