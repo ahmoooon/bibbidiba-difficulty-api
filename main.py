@@ -380,14 +380,6 @@ def predict(req: DifficultyRequest):
         # re-raise clean API errors
         raise
     except Exception as e:
-        # Try to dump partial data for debugging
-        print("[DEBUG] Error building features:", e)
-        try:
-            import traceback
-            traceback.print_exc()
-        except:
-            pass
-        # Optionally: save whatever features_df exists
         if 'features_df' in locals() and features_df is not None:
             features_df.to_csv("/tmp/features_partial_debug.csv", index=False)
             print("Partial features saved to /tmp/features_partial_debug.csv")
@@ -395,6 +387,8 @@ def predict(req: DifficultyRequest):
 
     if features_df is None or features_df.empty:
         raise HTTPException(status_code=404, detail="No finished sessions for this user")
+
+    save_latest_features(features_df)
 
     # 2) Pick the most recent session as the “current state”
     row = features_df.sort_values("startTime").iloc[-1]
@@ -437,9 +431,29 @@ def predict(req: DifficultyRequest):
         probabilities=class_probs,
     )
 
+latest_features_df: pd.DataFrame | None = None
+
+def save_latest_features(df: pd.DataFrame):
+    """Save only the most recent row used for prediction."""
+    global latest_features_df
+    if df.empty:
+        latest_features_df = None
+        return None
+
+    latest_features_df = df.sort_values("startTime").iloc[[-1]].copy()  # keep as DataFrame
+    csv_path = "/tmp/features_debug.csv"
+    latest_features_df.to_csv(csv_path, index=False)
+    return csv_path
+
 @app.get("/debug/latest_features")
 def download_latest_features():
     csv_path = "/tmp/features_debug.csv"
-    if not os.path.exists(csv_path):
+
+    if latest_features_df is None or not os.path.exists(csv_path):
         return {"error": "Debug CSV not found. Make sure a prediction was run first."}
-    return FileResponse(csv_path, filename="features_debug.csv", media_type="text/csv")
+
+    return FileResponse(
+        csv_path,
+        filename="features_debug.csv",
+        media_type="text/csv"
+    )
