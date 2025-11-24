@@ -191,12 +191,12 @@ def build_features_for_user(user_id: str) -> pd.DataFrame:
     attempts_by_session = dict(tuple(attempts_df.groupby("gSessionId")))
 
     def safe_int(val, default=0):
-    try:
-        if val is None or pd.isna(val):
+        try:
+            if val is None or pd.isna(val):
+                return default
+            return int(val)
+        except:
             return default
-        return int(val)
-    except:
-        return default
 
     for _, sess in sessions_df.iterrows():
         sid = sess.get("gSessionId")
