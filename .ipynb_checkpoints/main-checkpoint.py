@@ -190,17 +190,23 @@ def build_features_for_user(user_id: str) -> pd.DataFrame:
     features_rows = []
     attempts_by_session = dict(tuple(attempts_df.groupby("gSessionId")))
 
+    def safe_int(val, default=0):
+    try:
+        if val is None or pd.isna(val):
+            return default
+        return int(val)
+    except:
+        return default
+
     for _, sess in sessions_df.iterrows():
         sid = sess.get("gSessionId")
         game_type = sess.get("gameType")
         duration_min = float(sess.get("durationMin", 0.0) or 0.0)
         avg_acc = float(sess.get("avgAccuracy", 0.0) or 0.0)  # 0..1
-        target_count_raw = sess.get("targetCount", 0)
-        target_count = int(0 if pd.isna(target_count_raw) else target_count_raw)
-        completed_count_raw = sess.get("completedCount", 0)
-        completed_count = int(0 if pd.isna(completed_count_raw) else completed_count_raw)
-        success_count_raw = sess.get("successCount", 0)
-        success_count = int(0 if pd.isna(success_count_raw) else success_count_raw)
+        
+        completed_count = safe_int(sess.get("completedCount"))
+        success_count   = safe_int(sess.get("successCount"))
+        target_count    = safe_int(sess.get("targetCount"))
 
         sess_attempts = attempts_by_session.get(sid)
         if sess_attempts is None or sess_attempts.empty:
@@ -354,7 +360,7 @@ def build_features_for_user(user_id: str) -> pd.DataFrame:
     
     features_df["retentionScore"].fillna(0.0, inplace=True)
     features_df["improvementTrend"].fillna(0.0, inplace=True)
-
+    
     return features_df
 
 
