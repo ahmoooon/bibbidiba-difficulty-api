@@ -143,7 +143,7 @@ def build_features_for_user(user_id: str) -> pd.DataFrame:
     # ---------------------------
     # 2) Load attempts for child
     # ---------------------------
-    attempts_ref = db.collection_group("wordAttempts").where("userId", "==", user_id)
+    attempts_ref = db.collection_group("wordAttempts").where(filter=("userId", "==", user_id))
     attempts = []
     for doc in attempts_ref.stream():
         row = doc.to_dict() or {}
@@ -378,9 +378,12 @@ def predict(req: DifficultyRequest):
     # 2) Pick the most recent session as the “current state”
     row = features_df.sort_values("startTime").iloc[-1]
 
-    debug_csv_path = f"/tmp/features_{req.userId}.csv"
-    row.to_frame().T.to_csv(debug_csv_path, index=False)
-    print(f"[DEBUG] Latest session features saved to: {debug_csv_path}")
+    print("=== Latest Session Features for Debug ===")
+    print(row.to_dict())  # will appear in Render logs
+
+    # Optionally: export to /tmp/features_debug.csv (safe writable path)
+    features_df.tail(1).to_csv("/tmp/features_debug.csv", index=False)
+    print("Features saved to /tmp/features_debug.csv")
 
     # 3) Build input vector in EXACT training order
     try:
