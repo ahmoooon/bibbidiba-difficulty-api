@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import joblib
 import numpy as np
@@ -429,3 +430,10 @@ def predict(req: DifficultyRequest):
         confidence=confidence,
         probabilities=class_probs,
     )
+
+@app.get("/debug/latest_features")
+def download_latest_features():
+    csv_path = "/tmp/features_debug.csv"
+    if not os.path.exists(csv_path):
+        return {"error": "Debug CSV not found. Make sure a prediction was run first."}
+    return FileResponse(csv_path, filename="features_debug.csv", media_type="text/csv")
