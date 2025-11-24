@@ -194,10 +194,12 @@ def build_features_for_user(user_id: str) -> pd.DataFrame:
         game_type = sess.get("gameType")
         duration_min = float(sess.get("durationMin", 0.0) or 0.0)
         avg_acc = float(sess.get("avgAccuracy", 0.0) or 0.0)  # 0..1
-        target_count = int(sess.get("targetCount", 0) or 0)
+        target_count_raw = sess.get("targetCount", 0)
+        target_count = int(0 if pd.isna(target_count_raw) else target_count_raw)
         completed_count_raw = sess.get("completedCount", 0)
         completed_count = int(0 if pd.isna(completed_count_raw) else completed_count_raw)
-        success_count = int(sess.get("successCount", 0) or 0)
+        success_count_raw = sess.get("successCount", 0)
+        success_count = int(0 if pd.isna(success_count_raw) else success_count_raw)
 
         sess_attempts = attempts_by_session.get(sid)
         if sess_attempts is None or sess_attempts.empty:
