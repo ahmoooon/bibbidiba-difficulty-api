@@ -370,6 +370,17 @@ def predict(req: DifficultyRequest):
         # re-raise clean API errors
         raise
     except Exception as e:
+        # Try to dump partial data for debugging
+        print("[DEBUG] Error building features:", e)
+        try:
+            import traceback
+            traceback.print_exc()
+        except:
+            pass
+        # Optionally: save whatever features_df exists
+        if 'features_df' in locals() and features_df is not None:
+            features_df.to_csv("/tmp/features_partial_debug.csv", index=False)
+            print("Partial features saved to /tmp/features_partial_debug.csv")
         raise HTTPException(status_code=500, detail=f"Error computing features: {e}")
 
     if features_df is None or features_df.empty:
@@ -377,13 +388,6 @@ def predict(req: DifficultyRequest):
 
     # 2) Pick the most recent session as the “current state”
     row = features_df.sort_values("startTime").iloc[-1]
-
-    print("=== Latest Session Features for Debug ===")
-    print(row.to_dict())  # will appear in Render logs
-
-    # Optionally: export to /tmp/features_debug.csv (safe writable path)
-    features_df.tail(1).to_csv("/tmp/features_debug.csv", index=False)
-    print("Features saved to /tmp/features_debug.csv")
 
     # 3) Build input vector in EXACT training order
     try:
